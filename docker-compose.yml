@@ -1,0 +1,54 @@
+version: '3.9'
+
+services:
+  app:    
+    container_name: ecommerce-app
+    build:
+      context: . 
+      dockerfile: Dockerfile
+    environment: 
+      REDIS_URL: redis:6379   
+      APP_PORT: ${APP_PORT:-80}
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS} 
+    ports:
+      - "${APP_PORT:-80}:8080" 
+    restart: unless-stopped
+    depends_on: 
+      - redis 
+      - mysql
+    networks: 
+      - ecommerce  
+  redis:
+    image: "redis:alpine" 
+    restart: unless-stopped
+    networks:
+      - ecommerce
+  mysql:
+    container_name: ecommerce-db
+    image: 'mysql:8.0'
+    restart: unless-stopped
+    ports:
+      - '${DB_PORT:-3306}:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASS}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASS}
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - 'db:/docker-entrypoint-initdb.d'
+    networks:
+      - ecommerce
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-p${DB_PASS}"]
+
+volumes:
+  db:
+    driver: local
+
+networks:
+  ecommerce:    
+    driver: bridge
