@@ -1,4 +1,4 @@
-# golang-app
+# golang-boilerplate
 
 Go, Mysql, Redis, Selenium.
 
